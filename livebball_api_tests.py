@@ -6,7 +6,7 @@ import pytz
 tz = pytz.timezone('US/Eastern')
 today = datetime.today().strftime('%Y-%m-%d')
 midnight = tz.localize(datetime.combine(datetime.now(tz).date(), time(0, 0)), is_dst=None).timestamp()
-print(today, midnight)
+# print(today, midnight)
 
 url = "https://api.sofascore.com/api/v1/sport/baseball/scheduled-events/" + today
 
