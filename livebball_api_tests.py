@@ -8,6 +8,41 @@ today = datetime.today().strftime('%Y-%m-%d')
 midnight = tz.localize(datetime.combine(datetime.now(tz).date(), time(0, 0)), is_dst=None).timestamp()
 # print(today, midnight)
 
+def lineup():
+    lineQ = input("Looking for a lineup? yes/no: ")
+    if lineQ == 'no':
+        pass
+    elif lineQ == 'yes':
+        awayteam = {}
+        hometeam = {}
+        gameline = input("Input the gameid: ")
+        urlline = 'https://api.sofascore.com/api/v1/event/' + gameline + '/lineups'
+        response = requests.request("GET", urlline, data=payload, headers=headers)
+        jsondata = json.loads(response.text)
+        for player in jsondata['away']['players']:
+            order = player['statistics']['battingListIndex']
+            name = player['player']['name']
+            jersey = player['jerseyNumber']
+            position = player['position']
+            values = jersey + ' ' + name + ' ' + position
+            awayteam[order] = values
+        for player in jsondata['home']['players']:
+            order = player['statistics']['battingListIndex']
+            name = player['player']['name']
+            jersey = player['jerseyNumber']
+            position = player['position']
+            values = jersey + ' ' + name + ' ' + position
+            hometeam[order] = values
+        print('Away team:')
+        for k, v in sorted(awayteam.items()):
+            print(v)
+        print('Home team:')
+        for k, v in sorted(hometeam.items()):
+            print(v)
+    else:
+        print("Choose yes or no")
+        return lineup()
+
 url = "https://api.sofascore.com/api/v1/sport/baseball/scheduled-events/" + today
 
 payload = ""
@@ -34,13 +69,18 @@ for game in jsondata['events']:
         continue
     if game['tournament']['name'] != "MLB, Regular Season":
         continue
+    gametime = pytz.timezone('US/Eastern').localize(datetime.fromtimestamp(game['startTimestamp']))
+    gameid = game['id']
     league = game['tournament']['name']
     hometeam = game['homeTeam']['name']
     awayteam = game['awayTeam']['name']
     if game['status']['description'] == 'Not started':
-        print(league, '|', hometeam, "vs", awayteam, "has not started")
+        print(league, '|', hometeam, "vs", awayteam, "has not started, game starts at", gametime.strftime('%H:%M'), '|', gameid)
         continue
     status = game['status']['description']
     homescore = game['homeScore']['current']
     awayscore = game['awayScore']['current']
-    print(league, '|', hometeam, homescore, '-', awayscore, awayteam, status)
+    print(league, '|', awayteam, awayscore, '-', homescore, hometeam, status, '|', gameid)
+
+lineup()
+
